@@ -17,11 +17,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Настройка Navigation Component
+        // Setup Navigation Component
         NavHostFragment navHostFragment =
                 (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
 
         if (navHostFragment != null) {
             navController = navHostFragment.getNavController();
             AppBarConfiguration appBarConfiguration =
-                    new
+                    new AppBarConfiguration.Builder(R.id.apodListFragment).build();
+            NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        }
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        return navController.navigateUp() || super.onSupportNavigateUp();
+    }
+}
