@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,22 +39,22 @@ public class FavoritesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Инициализация ViewModel
+        // Initialize ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(ApodViewModel.class);
 
-        // Инициализация UI элементов
+        // Initialize UI elements
         recyclerView = view.findViewById(R.id.favorites_recycler_view);
         progressBar = view.findViewById(R.id.favorites_progress_bar);
         emptyView = view.findViewById(R.id.empty_view);
 
-        // Настройка RecyclerView
+        // Set up RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new FavoritesAdapter();
         recyclerView.setAdapter(adapter);
 
-        // Обработка кликов
+        // Handle clicks
         adapter.setOnItemClickListener(favoriteApod -> {
-            // Конвертируем ApodEntity в ApodResponse для показа деталей
+            // Convert ApodEntity to ApodResponse to show details
             ApodResponse apod = new ApodResponse();
             apod.setDate(favoriteApod.getDate());
             apod.setTitle(favoriteApod.getTitle());
@@ -64,14 +65,11 @@ public class FavoritesFragment extends Fragment {
             apod.setCopyright(favoriteApod.getCopyright());
 
             viewModel.setSelectedApod(apod);
-            // Навигация к экрану деталей
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.nav_host_fragment, new ApodDetailFragment())
-                    .addToBackStack(null)
-                    .commit();
+            // Navigate to detail screen
+            Navigation.findNavController(view).navigate(R.id.action_favoritesFragment_to_apodDetailFragment);
         });
 
-        // Наблюдение за данными
+        // Observe data
         viewModel.getFavorites().observe(getViewLifecycleOwner(), favorites -> {
             adapter.setFavoritesList(favorites);
             if (favorites != null && favorites.isEmpty()) {
@@ -93,7 +91,7 @@ public class FavoritesFragment extends Fragment {
             }
         });
 
-        // Загрузка избранных
+        // Load favorites
         viewModel.loadFavorites();
     }
 }
