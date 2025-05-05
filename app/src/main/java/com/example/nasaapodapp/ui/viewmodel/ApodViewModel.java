@@ -1,6 +1,7 @@
 package com.example.nasaapodapp.ui.viewmodel;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -21,6 +22,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ApodViewModel extends AndroidViewModel {
 
+    private static final String TAG = "ApodViewModel";
     private final ApodRepository repository;
     private final CompositeDisposable disposables = new CompositeDisposable();
 
@@ -74,21 +76,27 @@ public class ApodViewModel extends AndroidViewModel {
     }
 
     public void setSelectedApod(ApodResponse apod) {
+        Log.d(TAG, "Установка selectedApod: " + (apod != null ? apod.getTitle() : "null"));
         selectedApod.setValue(apod);
-        checkIfFavorite(apod.getDate());
-        checkIfHasQuiz(apod.getDate());
+        if (apod != null) {
+            checkIfFavorite(apod.getDate());
+            checkIfHasQuiz(apod.getDate());
+        }
     }
 
     public void loadApodList(int count) {
+        Log.d(TAG, "Загрузка списка APOD, количество: " + count);
         isLoading.setValue(true);
         Disposable disposable = repository.getApodList(count)
                 .subscribe(
                         result -> {
+                            Log.d(TAG, "Список APOD загружен, размер: " + result.size());
                             apodList.setValue(result);
                             isLoading.setValue(false);
                         },
                         throwable -> {
-                            error.setValue("Error loading NASA APOD data: " + throwable.getMessage());
+                            Log.e(TAG, "Ошибка загрузки списка APOD: " + throwable.getMessage());
+                            error.setValue("Ошибка загрузки данных NASA APOD: " + throwable.getMessage());
                             isLoading.setValue(false);
                         }
                 );
@@ -96,15 +104,18 @@ public class ApodViewModel extends AndroidViewModel {
     }
 
     public void loadFavorites() {
+        Log.d(TAG, "Загрузка избранного");
         isLoading.setValue(true);
         Disposable disposable = repository.getFavorites()
                 .subscribe(
                         result -> {
+                            Log.d(TAG, "Избранное загружено, размер: " + result.size());
                             favorites.setValue(result);
                             isLoading.setValue(false);
                         },
                         throwable -> {
-                            error.setValue("Error loading favorites: " + throwable.getMessage());
+                            Log.e(TAG, "Ошибка загрузки избранного: " + throwable.getMessage());
+                            error.setValue("Ошибка загрузки избранного: " + throwable.getMessage());
                             isLoading.setValue(false);
                         }
                 );
@@ -112,52 +123,90 @@ public class ApodViewModel extends AndroidViewModel {
     }
 
     public void checkIfFavorite(String date) {
+        Log.d(TAG, "Проверка статуса избранного для даты: " + date);
         Disposable disposable = repository.isFavorite(date)
                 .subscribe(
-                        isFavorite::setValue,
-                        throwable -> error.setValue("Error checking favorite status: " + throwable.getMessage())
+                        result -> {
+                            Log.d(TAG, "Статус избранного: " + result);
+                            isFavorite.setValue(result);
+                        },
+                        throwable -> {
+                            Log.e(TAG, "Ошибка проверки статуса избранного: " + throwable.getMessage());
+                            error.setValue("Ошибка проверки статуса избранного: " + throwable.getMessage());
+                        }
                 );
         disposables.add(disposable);
     }
 
     public void toggleFavorite() {
         ApodResponse apod = selectedApod.getValue();
-        if (apod != null) {
-            boolean currentIsFavorite = isFavorite.getValue() != null && isFavorite.getValue();
-
-            Disposable disposable;
-            if (currentIsFavorite) {
-                disposable = repository.removeFromFavorites(apod.getDate())
-                        .subscribe(
-                                () -> isFavorite.postValue(false),
-                                throwable -> error.postValue("Error removing from favorites: " + throwable.getMessage())
-                        );
-            } else {
-                disposable = repository.addToFavorites(apod)
-                        .subscribe(
-                                () -> isFavorite.postValue(true),
-                                throwable -> error.postValue("Error adding to favorites: " + throwable.getMessage())
-                        );
-            }
-            disposables.add(disposable);
+        if (apod == null) {
+            Log.e(TAG, "Ошибка: selectedApod равен null при переключении избранного");
+            error.setValue("Изображение не выбрано для добавления в избранное");
+            return;
         }
+
+        boolean currentIsFavorite = isFavorite.getValue() != null && isFavorite.getValue();
+        Log.d(TAG, "Переключение избранного для: " + apod.getTitle() + ", текущее состояние: " + currentIsFavorite);
+
+        Disposable disposable;
+        if (currentIsFavorite) {
+            disposable = repository.removeFromFavorites(apod.getDate())
+                    .subscribe(
+                            () -> {
+                                Log.d(TAG, "Удалено из избранного: " + apod.getDate());
+                                isFavorite.postValue(false);
+                            },
+                            throwable -> {
+                                Log.e(TAG, "Ошибка удаления из избранного: " + throwable.getMessage());
+                                error.postValue("Ошибка удаления из избранного: " + throwable.getMessage());
+                            }
+                    );
+        } else {
+            disposable = repository.addToFavorites(apod)
+                    .subscribe(
+                            () -> {
+                                Log.d(TAG, "Добавлено в избранное: " + apod.getDate());
+                                isFavorite.postValue(true);
+                            },
+                            throwable -> {
+                                Log.e(TAG, "Ошибка добавления в избранное: " + throwable.getMessage());
+                                error.postValue("Ошибка добавления в избранное: " + throwable.getMessage());
+                            }
+                    );
+        }
+        disposables.add(disposable);
     }
 
     // Quiz methods
     public void loadQuizForApod(String date) {
+        Log.d(TAG, "Загрузка теста для даты: " + date);
         Disposable disposable = repository.getQuizForApod(date)
                 .subscribe(
-                        quizData::setValue,
-                        throwable -> error.postValue("Error loading quiz: " + throwable.getMessage())
+                        quiz -> {
+                            Log.d(TAG, "Тест загружен: " + (quiz != null ? quiz.getQuestion() : "null"));
+                            quizData.setValue(quiz);
+                        },
+                        throwable -> {
+                            Log.e(TAG, "Ошибка загрузки теста: " + throwable.getMessage());
+                            error.setValue("Ошибка загрузки теста: " + throwable.getMessage());
+                        }
                 );
         disposables.add(disposable);
     }
 
     public void checkIfHasQuiz(String date) {
+        Log.d(TAG, "Проверка наличия теста для даты: " + date);
         Disposable disposable = repository.hasQuiz(date)
                 .subscribe(
-                        hasQuiz::setValue,
-                        throwable -> error.postValue("Error checking quiz status: " + throwable.getMessage())
+                        result -> {
+                            Log.d(TAG, "Наличие теста: " + result);
+                            hasQuiz.setValue(result);
+                        },
+                        throwable -> {
+                            Log.e(TAG, "Ошибка проверки наличия теста: " + throwable.getMessage());
+                            error.setValue("Ошибка проверки наличия теста: " + throwable.getMessage());
+                        }
                 );
         disposables.add(disposable);
     }
@@ -165,37 +214,57 @@ public class ApodViewModel extends AndroidViewModel {
     public void createOrUpdateQuiz(String question, String correctAnswer,
                                    String wrongAnswer1, String wrongAnswer2, String wrongAnswer3) {
         ApodResponse apod = selectedApod.getValue();
-        if (apod != null) {
-            Disposable disposable = repository.createQuiz(
-                            apod.getDate(), question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3)
-                    .subscribe(
-                            () -> {
-                                hasQuiz.postValue(true);
-                                loadQuizForApod(apod.getDate());
-                            },
-                            throwable -> error.postValue("Error creating quiz: " + throwable.getMessage())
-                    );
-            disposables.add(disposable);
+        if (apod == null) {
+            Log.e(TAG, "Ошибка: selectedApod равен null при создании теста");
+            error.setValue("Изображение не выбрано для создания теста");
+            return;
         }
+
+        Log.d(TAG, "Создание/обновление теста для: " + apod.getDate() + ", вопрос: " + question);
+        Disposable disposable = repository.createQuiz(
+                        apod.getDate(), question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3)
+                .subscribe(
+                        () -> {
+                            Log.d(TAG, "Тест успешно создан/обновлён для: " + apod.getDate());
+                            hasQuiz.postValue(true);
+                            checkIfHasQuiz(apod.getDate()); // Явная проверка наличия теста
+                            loadQuizForApod(apod.getDate());
+                        },
+                        throwable -> {
+                            Log.e(TAG, "Ошибка создания теста: " + throwable.getMessage(), throwable);
+                            error.setValue("Ошибка создания теста: " + throwable.getMessage());
+                        }
+                );
+        disposables.add(disposable);
     }
 
     public void deleteQuiz() {
         ApodResponse apod = selectedApod.getValue();
-        if (apod != null) {
-            Disposable disposable = repository.deleteQuiz(apod.getDate())
-                    .subscribe(
-                            () -> {
-                                hasQuiz.postValue(false);
-                                quizData.postValue(null);
-                            },
-                            throwable -> error.postValue("Error deleting quiz: " + throwable.getMessage())
-                    );
-            disposables.add(disposable);
+        if (apod == null) {
+            Log.e(TAG, "Ошибка: selectedApod равен null при удалении теста");
+            error.setValue("Изображение не выбрано для удаления теста");
+            return;
         }
+
+        Log.d(TAG, "Удаление теста для: " + apod.getDate());
+        Disposable disposable = repository.deleteQuiz(apod.getDate())
+                .subscribe(
+                        () -> {
+                            Log.d(TAG, "Тест удалён для: " + apod.getDate());
+                            hasQuiz.postValue(false);
+                            quizData.postValue(null);
+                        },
+                        throwable -> {
+                            Log.e(TAG, "Ошибка удаления теста: " + throwable.getMessage());
+                            error.setValue("Ошибка удаления теста: " + throwable.getMessage());
+                        }
+                );
+        disposables.add(disposable);
     }
 
     @Override
     protected void onCleared() {
+        Log.d(TAG, "Очистка disposables");
         disposables.clear();
         super.onCleared();
     }

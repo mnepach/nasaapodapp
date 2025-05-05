@@ -1,6 +1,7 @@
 package com.example.nasaapodapp.ui.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import com.google.android.material.textfield.TextInputEditText;
 
 public class CreateQuizFragment extends Fragment {
 
+    private static final String TAG = "CreateQuizFragment";
     private ApodViewModel viewModel;
     private TextInputEditText questionEditText;
     private TextInputEditText correctAnswerEditText;
@@ -43,7 +45,7 @@ public class CreateQuizFragment extends Fragment {
         // Инициализация ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(ApodViewModel.class);
 
-        // Инициализация UI элементов
+        // Инициализация элементов UI
         questionEditText = view.findViewById(R.id.edit_question);
         correctAnswerEditText = view.findViewById(R.id.edit_correct_answer);
         wrongAnswer1EditText = view.findViewById(R.id.edit_wrong_answer_1);
@@ -52,18 +54,20 @@ public class CreateQuizFragment extends Fragment {
         saveButton = view.findViewById(R.id.save_quiz_button);
         cancelButton = view.findViewById(R.id.cancel_button);
 
-        // Проверяем, существует ли уже викторина для этого APOD
+        // Проверка наличия теста для выбранного APOD
         viewModel.getHasQuiz().observe(getViewLifecycleOwner(), hasQuiz -> {
+            Log.d(TAG, "Наличие теста: " + hasQuiz);
             isEditing = hasQuiz;
             if (hasQuiz) {
-                // Если викторина существует, загружаем ее данные
+                // Загрузка существующего теста
                 viewModel.loadQuizForApod(viewModel.getSelectedApod().getValue().getDate());
             }
         });
 
-        // Загружаем данные викторины, если она существует
+        // Загрузка данных теста, если редактируем
         viewModel.getQuizData().observe(getViewLifecycleOwner(), quizEntity -> {
             if (quizEntity != null) {
+                Log.d(TAG, "Загружен тест: " + quizEntity.getQuestion());
                 questionEditText.setText(quizEntity.getQuestion());
                 correctAnswerEditText.setText(quizEntity.getCorrectAnswer());
                 wrongAnswer1EditText.setText(quizEntity.getWrongAnswer1());
@@ -72,7 +76,7 @@ public class CreateQuizFragment extends Fragment {
             }
         });
 
-        // Обработка нажатия на кнопку сохранения
+        // Обработка кнопки сохранения
         saveButton.setOnClickListener(v -> {
             String question = questionEditText.getText().toString().trim();
             String correctAnswer = correctAnswerEditText.getText().toString().trim();
@@ -80,30 +84,48 @@ public class CreateQuizFragment extends Fragment {
             String wrongAnswer2 = wrongAnswer2EditText.getText().toString().trim();
             String wrongAnswer3 = wrongAnswer3EditText.getText().toString().trim();
 
-            // Проверка на заполнение всех полей
+            // Валидация полей
             if (question.isEmpty() || correctAnswer.isEmpty() ||
                     wrongAnswer1.isEmpty() || wrongAnswer2.isEmpty() || wrongAnswer3.isEmpty()) {
-                Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                Log.w(TAG, "Ошибка: не все поля заполнены");
+                Toast.makeText(requireContext(), "Заполните все поля", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Сохраняем викторину
+            // Проверка наличия selectedApod
+            if (viewModel.getSelectedApod().getValue() == null) {
+                Log.e(TAG, "Ошибка: selectedApod равен null");
+                Toast.makeText(requireContext(), "Изображение не выбрано для создания теста", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Сохранение теста
+            Log.d(TAG, "Сохранение теста, вопрос: " + question);
+            saveButton.setEnabled(false); // Предотвращение множественных кликов
             viewModel.createOrUpdateQuiz(question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3);
-            Toast.makeText(requireContext(), R.string.quiz_created, Toast.LENGTH_SHORT).show();
-
-            // Возвращаемся назад
-            Navigation.findNavController(requireView()).popBackStack();
         });
 
-        // Обработка нажатия на кнопку отмены
+        // Обработка успешного создания теста
+        viewModel.getHasQuiz().observe(getViewLifecycleOwner(), hasQuiz -> {
+            if (hasQuiz && !saveButton.isEnabled()) {
+                Log.d(TAG, "Тест успешно создан, возврат в ApodDetailFragment");
+                Toast.makeText(requireContext(), isEditing ? R.string.quiz_updated : R.string.quiz_created, Toast.LENGTH_SHORT).show();
+                Navigation.findNavController(requireView()).popBackStack();
+            }
+        });
+
+        // Обработка кнопки отмены
         cancelButton.setOnClickListener(v -> {
+            Log.d(TAG, "Нажата кнопка отмены");
             Navigation.findNavController(requireView()).popBackStack();
         });
 
-        // Наблюдаем за ошибками
+        // Наблюдение за ошибками
         viewModel.getError().observe(getViewLifecycleOwner(), errorMessage -> {
             if (errorMessage != null && !errorMessage.isEmpty()) {
+                Log.e(TAG, "Ошибка: " + errorMessage);
                 Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show();
+                saveButton.setEnabled(true); // Включение кнопки при ошибке
             }
         });
     }

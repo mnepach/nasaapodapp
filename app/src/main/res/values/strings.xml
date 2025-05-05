@@ -22,6 +22,7 @@
     <string name="incorrect">Incorrect!</string>
     <string name="select_an_answer">Please select an answer</string>
     <string name="quiz_created">Quiz created successfully</string>
+    <string name="quiz_updated">Quiz updated successfully</string>
     <string name="edit_quiz">Edit Quiz</string>
     <string name="delete_quiz">Delete Quiz</string>
     <string name="save">Save</string>

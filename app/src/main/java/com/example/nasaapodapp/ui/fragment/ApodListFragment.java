@@ -27,7 +27,6 @@ public class ApodListFragment extends Fragment {
     private ApodAdapter adapter;
     private ProgressBar progressBar;
     private FloatingActionButton favoritesButton;
-    private FloatingActionButton createQuizButton;
 
     @Nullable
     @Override
@@ -46,7 +45,6 @@ public class ApodListFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_view);
         progressBar = view.findViewById(R.id.progress_bar);
         favoritesButton = view.findViewById(R.id.favorites_button);
-        createQuizButton = view.findViewById(R.id.create_quiz_button);
 
         // Set up RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -61,18 +59,6 @@ public class ApodListFragment extends Fragment {
 
         favoritesButton.setOnClickListener(v -> {
             Navigation.findNavController(view).navigate(R.id.action_apodListFragment_to_favoritesFragment);
-        });
-
-        createQuizButton.setOnClickListener(v -> {
-            // Select the first APOD or fetch a recent one for quiz creation
-            viewModel.getApodList().observe(getViewLifecycleOwner(), apodResponses -> {
-                if (apodResponses != null && !apodResponses.isEmpty()) {
-                    viewModel.setSelectedApod(apodResponses.get(0));
-                    Navigation.findNavController(view).navigate(R.id.action_apodListFragment_to_createQuizFragment);
-                } else {
-                    Toast.makeText(requireContext(), "No APOD available for quiz creation", Toast.LENGTH_SHORT).show();
-                }
-            });
         });
 
         // Observe data

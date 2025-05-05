@@ -1,6 +1,7 @@
 package com.example.nasaapodapp.ui.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,7 @@ import java.util.List;
 
 public class QuizFragment extends Fragment {
 
+    private static final String TAG = "QuizFragment";
     private ApodViewModel viewModel;
     private ImageView quizImage;
     private TextView quizQuestion;
@@ -49,10 +51,10 @@ public class QuizFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Initialize ViewModel
+        // Инициализация ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(ApodViewModel.class);
 
-        // Initialize UI elements
+        // Инициализация элементов UI
         quizImage = view.findViewById(R.id.quiz_image);
         quizQuestion = view.findViewById(R.id.quiz_question);
         answerGroup = view.findViewById(R.id.answer_group);
@@ -64,43 +66,60 @@ public class QuizFragment extends Fragment {
         checkAnswerButton = view.findViewById(R.id.check_answer_button);
         closeButton = view.findViewById(R.id.close_button);
 
-        // Load quiz data
+        // Загрузка данных теста
         ApodResponse apod = viewModel.getSelectedApod().getValue();
-        if (apod != null) {
-            // Load APOD image
-            Glide.with(requireContext())
-                    .load(apod.getUrl())
-                    .placeholder(R.drawable.placeholder)
-                    .error(R.drawable.error)
-                    .into(quizImage);
-
-            // Load quiz
-            viewModel.loadQuizForApod(apod.getDate());
+        if (apod == null) {
+            Log.e(TAG, "Ошибка: selectedApod равен null");
+            Toast.makeText(requireContext(), "Ошибка: изображение не выбрано", Toast.LENGTH_SHORT).show();
+            Navigation.findNavController(view).popBackStack();
+            return;
         }
 
-        // Observe quiz data
-        viewModel.getQuizData().observe(getViewLifecycleOwner(), this::bindQuizData);
+        // Загрузка изображения APOD
+        Log.d(TAG, "Загрузка изображения для APOD: " + apod.getUrl());
+        Glide.with(requireContext())
+                .load(apod.getUrl())
+                .placeholder(R.drawable.placeholder)
+                .error(R.drawable.error)
+                .into(quizImage);
 
-        // Observe errors
+        // Загрузка теста
+        Log.d(TAG, "Загрузка теста для даты: " + apod.getDate());
+        viewModel.loadQuizForApod(apod.getDate());
+
+        // Наблюдение за данными теста
+        viewModel.getQuizData().observe(getViewLifecycleOwner(), quiz -> {
+            Log.d(TAG, "Получены данные теста: " + (quiz != null ? quiz.getQuestion() : "null"));
+            bindQuizData(quiz);
+        });
+
+        // Наблюдение за ошибками
         viewModel.getError().observe(getViewLifecycleOwner(), errorMessage -> {
             if (errorMessage != null && !errorMessage.isEmpty()) {
+                Log.e(TAG, "Ошибка: " + errorMessage);
                 Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show();
+                Navigation.findNavController(view).popBackStack();
             }
         });
 
-        // Handle check answer button
+        // Обработка кнопки проверки ответа
         checkAnswerButton.setOnClickListener(v -> checkAnswer());
 
-        // Handle close button
+        // Обработка кнопки закрытия
         closeButton.setOnClickListener(v -> Navigation.findNavController(view).popBackStack());
     }
 
     private void bindQuizData(QuizEntity quiz) {
-        if (quiz == null) return;
+        if (quiz == null) {
+            Log.e(TAG, "Ошибка: QuizEntity равен null");
+            Toast.makeText(requireContext(), "Ошибка: тест не найден", Toast.LENGTH_SHORT).show();
+            Navigation.findNavController(requireView()).popBackStack();
+            return;
+        }
 
         quizQuestion.setText(quiz.getQuestion());
 
-        // Shuffle answers
+        // Перемешивание ответов
         List<String> answers = new ArrayList<>();
         answers.add(quiz.getCorrectAnswer());
         answers.add(quiz.getWrongAnswer1());
@@ -108,7 +127,8 @@ public class QuizFragment extends Fragment {
         answers.add(quiz.getWrongAnswer3());
         Collections.shuffle(answers);
 
-        // Set answers to radio buttons
+        // Установка ответов в радио-кнопки
+        Log.d(TAG, "Установка ответов: " + answers);
         answer1.setText(answers.get(0));
         answer2.setText(answers.get(1));
         answer3.setText(answers.get(2));
@@ -123,13 +143,17 @@ public class QuizFragment extends Fragment {
         }
 
         QuizEntity quiz = viewModel.getQuizData().getValue();
-        if (quiz == null) return;
+        if (quiz == null) {
+            Log.e(TAG, "Ошибка: QuizEntity равен null при проверке ответа");
+            Toast.makeText(requireContext(), "Ошибка: тест не найден", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         RadioButton selectedAnswer = answerGroup.findViewById(selectedId);
         String selectedText = selectedAnswer.getText().toString();
         boolean isCorrect = selectedText.equals(quiz.getCorrectAnswer());
 
-        // Show result
+        // Показ результата
         resultText.setVisibility(View.VISIBLE);
         if (isCorrect) {
             resultText.setText(R.string.correct);
@@ -139,7 +163,7 @@ public class QuizFragment extends Fragment {
             resultText.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark));
         }
 
-        // Disable answer selection and show close button
+        // Отключение выбора ответа и показ кнопки закрытия
         answerGroup.setEnabled(false);
         for (int i = 0; i < answerGroup.getChildCount(); i++) {
             answerGroup.getChildAt(i).setEnabled(false);

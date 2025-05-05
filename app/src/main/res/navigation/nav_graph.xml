@@ -16,9 +16,6 @@
         <action
             android:id="@+id/action_apodListFragment_to_favoritesFragment"
             app:destination="@id/favoritesFragment" />
-        <action
-            android:id="@+id/action_apodListFragment_to_createQuizFragment"
-            app:destination="@id/createQuizFragment" />
     </fragment>
 
     <fragment
