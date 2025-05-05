@@ -22,7 +22,11 @@
         android:id="@+id/apodDetailFragment"
         android:name="com.example.nasaapodapp.ui.fragment.ApodDetailFragment"
         android:label="APOD Details"
-        tools:layout="@layout/fragment_apod_detail" />
+        tools:layout="@layout/fragment_apod_detail">
+        <action
+            android:id="@+id/action_apodDetailFragment_to_quizFragment"
+            app:destination="@id/quizFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/favoritesFragment"
@@ -33,4 +37,10 @@
             android:id="@+id/action_favoritesFragment_to_apodDetailFragment"
             app:destination="@id/apodDetailFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/quizFragment"
+        android:name="com.example.nasaapodapp.ui.fragment.QuizFragment"
+        android:label="Quiz"
+        tools:layout="@layout/fragment_quiz" />
 </navigation>
