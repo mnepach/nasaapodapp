@@ -38,20 +38,20 @@ public class ApodListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Инициализация ViewModel
+        // инициализация ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(ApodViewModel.class);
 
-        // Инициализация UI элементов
+        // инициализация UI элементов
         recyclerView = view.findViewById(R.id.recycler_view);
         progressBar = view.findViewById(R.id.progress_bar);
         favoritesButton = view.findViewById(R.id.favorites_button);
 
-        // Настройка RecyclerView
+        // настройка RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new ApodAdapter();
         recyclerView.setAdapter(adapter);
 
-        // Обработка кликов
+        // обработка кликов
         adapter.setOnItemClickListener(apod -> {
             viewModel.setSelectedApod(apod);
             Navigation.findNavController(view).navigate(R.id.action_apodListFragment_to_apodDetailFragment);
@@ -61,7 +61,7 @@ public class ApodListFragment extends Fragment {
             Navigation.findNavController(view).navigate(R.id.action_apodListFragment_to_favoritesFragment);
         });
 
-        // Наблюдение за данными
+        // наблюдение за данными
         viewModel.getApodList().observe(getViewLifecycleOwner(), apodResponses -> {
             adapter.setApodList(apodResponses);
         });
@@ -76,7 +76,7 @@ public class ApodListFragment extends Fragment {
             }
         });
 
-        // Загрузка данных
+        // загрузка данных
         if (viewModel.getApodList().getValue() == null || viewModel.getApodList().getValue().isEmpty()) {
             viewModel.loadApodList(20); // Загружаем 20 записей
         }

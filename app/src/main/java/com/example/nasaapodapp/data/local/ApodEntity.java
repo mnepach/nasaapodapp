@@ -17,7 +17,7 @@ public class ApodEntity {
     private String mediaType;
     private String copyright;
 
-    // Конструктор
+    // конструктор
     public ApodEntity(@NonNull String date, String title, String explanation,
                       String url, String hdUrl, String mediaType, String copyright) {
         this.date = date;
@@ -29,7 +29,7 @@ public class ApodEntity {
         this.copyright = copyright;
     }
 
-    // Геттеры и сеттеры
+    // геттеры и сеттеры
     @NonNull
     public String getDate() {
         return date;

@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.nasaapodapp.data.local.ApodEntity;
+import com.example.nasaapodapp.data.local.QuizEntity;
 import com.example.nasaapodapp.data.model.ApodResponse;
 import com.example.nasaapodapp.data.repository.ApodRepository;
 
@@ -29,6 +30,10 @@ public class ApodViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
     private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isFavorite = new MutableLiveData<>();
+
+    // Quiz related LiveData
+    private final MutableLiveData<QuizEntity> quizData = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> hasQuiz = new MutableLiveData<>();
 
     public ApodViewModel(@NonNull Application application) {
         super(application);
@@ -59,9 +64,19 @@ public class ApodViewModel extends AndroidViewModel {
         return isFavorite;
     }
 
+    // Quiz accessors
+    public LiveData<QuizEntity> getQuizData() {
+        return quizData;
+    }
+
+    public LiveData<Boolean> getHasQuiz() {
+        return hasQuiz;
+    }
+
     public void setSelectedApod(ApodResponse apod) {
         selectedApod.setValue(apod);
         checkIfFavorite(apod.getDate());
+        checkIfHasQuiz(apod.getDate());
     }
 
     public void loadApodList(int count) {
@@ -124,6 +139,57 @@ public class ApodViewModel extends AndroidViewModel {
                                 throwable -> error.postValue("Error adding to favorites: " + throwable.getMessage())
                         );
             }
+            disposables.add(disposable);
+        }
+    }
+
+    // Quiz methods
+    public void loadQuizForApod(String date) {
+        Disposable disposable = repository.getQuizForApod(date)
+                .subscribe(
+                        quizData::setValue,
+                        throwable -> error.postValue("Error loading quiz: " + throwable.getMessage())
+                );
+        disposables.add(disposable);
+    }
+
+    public void checkIfHasQuiz(String date) {
+        Disposable disposable = repository.hasQuiz(date)
+                .subscribe(
+                        hasQuiz::setValue,
+                        throwable -> error.postValue("Error checking quiz status: " + throwable.getMessage())
+                );
+        disposables.add(disposable);
+    }
+
+    public void createOrUpdateQuiz(String question, String correctAnswer,
+                                   String wrongAnswer1, String wrongAnswer2, String wrongAnswer3) {
+        ApodResponse apod = selectedApod.getValue();
+        if (apod != null) {
+            Disposable disposable = repository.createQuiz(
+                            apod.getDate(), question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3)
+                    .subscribe(
+                            () -> {
+                                hasQuiz.postValue(true);
+                                loadQuizForApod(apod.getDate());
+                            },
+                            throwable -> error.postValue("Error creating quiz: " + throwable.getMessage())
+                    );
+            disposables.add(disposable);
+        }
+    }
+
+    public void deleteQuiz() {
+        ApodResponse apod = selectedApod.getValue();
+        if (apod != null) {
+            Disposable disposable = repository.deleteQuiz(apod.getDate())
+                    .subscribe(
+                            () -> {
+                                hasQuiz.postValue(false);
+                                quizData.postValue(null);
+                            },
+                            throwable -> error.postValue("Error deleting quiz: " + throwable.getMessage())
+                    );
             disposables.add(disposable);
         }
     }

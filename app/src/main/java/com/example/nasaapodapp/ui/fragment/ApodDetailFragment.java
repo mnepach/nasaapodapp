@@ -40,10 +40,10 @@ public class ApodDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Инициализация ViewModel
+        // инициализация ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(ApodViewModel.class);
 
-        // Инициализация UI элементов
+        // инициализация UI элементов
         imageView = view.findViewById(R.id.detail_image_view);
         titleTextView = view.findViewById(R.id.detail_title_text_view);
         dateTextView = view.findViewById(R.id.detail_date_text_view);
@@ -51,21 +51,21 @@ public class ApodDetailFragment extends Fragment {
         copyrightTextView = view.findViewById(R.id.detail_copyright_text_view);
         favoriteButton = view.findViewById(R.id.favorite_button);
 
-        // Наблюдение за выбранным элементом
+        // наблюдение за выбранным элементом
         viewModel.getSelectedApod().observe(getViewLifecycleOwner(), this::bindApodData);
 
-        // Наблюдение за статусом избранного
+        // наблюдение за статусом избранного
         viewModel.getIsFavorite().observe(getViewLifecycleOwner(), isFavorite -> {
             favoriteButton.setImageResource(isFavorite ?
                     R.drawable.ic_favorite : R.drawable.ic_favorite_border);
         });
 
-        // Обработка клика по кнопке избранное
+        // обработка клика по кнопке избранное
         favoriteButton.setOnClickListener(v -> {
             viewModel.toggleFavorite();
         });
 
-        // Наблюдение за ошибками
+        // наблюдение за ошибками
         viewModel.getError().observe(getViewLifecycleOwner(), errorMessage -> {
             if (errorMessage != null && !errorMessage.isEmpty()) {
                 Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show();

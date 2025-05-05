@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NASA APOD App</string>
     <string name="astronomy_image">Astronomy image</string>
@@ -6,4 +7,21 @@
     <string name="remove_from_favorites">Remove from favorites</string>
     <string name="no_favorites">No favorite items yet</string>
     <string name="copyright">© %1$s</string>
+
+    <!-- Quiz related strings -->
+    <string name="create_quiz">Create Quiz</string>
+    <string name="take_quiz">Take Quiz</string>
+    <string name="question">Question</string>
+    <string name="correct_answer">Correct Answer</string>
+    <string name="wrong_answer_1">Wrong Answer 1</string>
+    <string name="wrong_answer_2">Wrong Answer 2</string>
+    <string name="wrong_answer_3">Wrong Answer 3</string>
+    <string name="check_answer">Check Answer</string>
+    <string name="close">Close</string>
+    <string name="correct">Correct!</string>
+    <string name="incorrect">Incorrect!</string>
+    <string name="select_an_answer">Please select an answer</string>
+    <string name="quiz_created">Quiz created successfully</string>
+    <string name="edit_quiz">Edit Quiz</string>
+    <string name="delete_quiz">Delete Quiz</string>
 </resources>
