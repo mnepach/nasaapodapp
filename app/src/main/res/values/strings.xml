@@ -24,4 +24,8 @@
     <string name="quiz_created">Quiz created successfully</string>
     <string name="edit_quiz">Edit Quiz</string>
     <string name="delete_quiz">Delete Quiz</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="manage_quiz">Manage Quiz</string>
+    <string name="quiz_description">Create a quiz about this astronomy picture. The quiz should contain one question with one correct answer and three wrong answers.</string>
 </resources>

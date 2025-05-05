@@ -27,6 +27,7 @@ public class ApodListFragment extends Fragment {
     private ApodAdapter adapter;
     private ProgressBar progressBar;
     private FloatingActionButton favoritesButton;
+    private FloatingActionButton createQuizButton;
 
     @Nullable
     @Override
@@ -38,20 +39,21 @@ public class ApodListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // инициализация ViewModel
+        // Initialize ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(ApodViewModel.class);
 
-        // инициализация UI элементов
+        // Initialize UI elements
         recyclerView = view.findViewById(R.id.recycler_view);
         progressBar = view.findViewById(R.id.progress_bar);
         favoritesButton = view.findViewById(R.id.favorites_button);
+        createQuizButton = view.findViewById(R.id.create_quiz_button);
 
-        // настройка RecyclerView
+        // Set up RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new ApodAdapter();
         recyclerView.setAdapter(adapter);
 
-        // обработка кликов
+        // Handle clicks
         adapter.setOnItemClickListener(apod -> {
             viewModel.setSelectedApod(apod);
             Navigation.findNavController(view).navigate(R.id.action_apodListFragment_to_apodDetailFragment);
@@ -61,7 +63,19 @@ public class ApodListFragment extends Fragment {
             Navigation.findNavController(view).navigate(R.id.action_apodListFragment_to_favoritesFragment);
         });
 
-        // наблюдение за данными
+        createQuizButton.setOnClickListener(v -> {
+            // Select the first APOD or fetch a recent one for quiz creation
+            viewModel.getApodList().observe(getViewLifecycleOwner(), apodResponses -> {
+                if (apodResponses != null && !apodResponses.isEmpty()) {
+                    viewModel.setSelectedApod(apodResponses.get(0));
+                    Navigation.findNavController(view).navigate(R.id.action_apodListFragment_to_createQuizFragment);
+                } else {
+                    Toast.makeText(requireContext(), "No APOD available for quiz creation", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        // Observe data
         viewModel.getApodList().observe(getViewLifecycleOwner(), apodResponses -> {
             adapter.setApodList(apodResponses);
         });
@@ -76,9 +90,9 @@ public class ApodListFragment extends Fragment {
             }
         });
 
-        // загрузка данных
+        // Load data
         if (viewModel.getApodList().getValue() == null || viewModel.getApodList().getValue().isEmpty()) {
-            viewModel.loadApodList(20); // Загружаем 20 записей
+            viewModel.loadApodList(20); // Load 20 entries
         }
     }
 }

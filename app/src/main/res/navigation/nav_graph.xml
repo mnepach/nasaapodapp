@@ -16,6 +16,9 @@
         <action
             android:id="@+id/action_apodListFragment_to_favoritesFragment"
             app:destination="@id/favoritesFragment" />
+        <action
+            android:id="@+id/action_apodListFragment_to_createQuizFragment"
+            app:destination="@id/createQuizFragment" />
     </fragment>
 
     <fragment
@@ -26,6 +29,9 @@
         <action
             android:id="@+id/action_apodDetailFragment_to_quizFragment"
             app:destination="@id/quizFragment" />
+        <action
+            android:id="@+id/action_apodDetailFragment_to_createQuizFragment"
+            app:destination="@id/createQuizFragment" />
     </fragment>
 
     <fragment
@@ -43,4 +49,10 @@
         android:name="com.example.nasaapodapp.ui.fragment.QuizFragment"
         android:label="Quiz"
         tools:layout="@layout/fragment_quiz" />
+
+    <fragment
+        android:id="@+id/createQuizFragment"
+        android:name="com.example.nasaapodapp.ui.fragment.CreateQuizFragment"
+        android:label="Create Quiz"
+        tools:layout="@layout/fragment_create_quiz" />
 </navigation>
