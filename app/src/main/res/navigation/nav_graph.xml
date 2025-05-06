@@ -51,5 +51,5 @@
         android:id="@+id/createQuizFragment"
         android:name="com.example.nasaapodapp.ui.fragment.CreateQuizFragment"
         android:label="Create Quiz"
-        tools:layout="@layout/fragment_create_quiz" />
+        tools:layout="@layout/dialog_create_quiz" />
 </navigation>
