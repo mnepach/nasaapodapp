@@ -8,6 +8,8 @@ public class ApodResponse {
     private String explanation;
     private String title;
     private String url;
+    private String hdUrl;
+    private String mediaType;
     private String copyright;
     private boolean isPreloaded;
 
@@ -28,6 +30,7 @@ public class ApodResponse {
         this.copyright = copyright;
         this.quizzes = quizzes;
         this.isPreloaded = true;
+        this.mediaType = "image"; // Default is image
     }
 
     public String getDate() {
@@ -60,6 +63,22 @@ public class ApodResponse {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getHdUrl() {
+        return hdUrl;
+    }
+
+    public void setHdUrl(String hdUrl) {
+        this.hdUrl = hdUrl;
+    }
+
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    public void setMediaType(String mediaType) {
+        this.mediaType = mediaType;
     }
 
     public String getCopyright() {

@@ -7,6 +7,7 @@ import com.example.nasaapodapp.data.local.ApodEntity;
 import com.example.nasaapodapp.data.model.ApodResponse;
 import com.example.nasaapodapp.data.util.PreloadedApodData;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -18,9 +19,11 @@ public class ApodRepository {
     private static final String TAG = "ApodRepository";
 
     private final Application application;
+    private final List<ApodEntity> favoritesList;
 
     public ApodRepository(Application application) {
         this.application = application;
+        this.favoritesList = new ArrayList<>();
     }
 
     // Get preloaded APOD list
@@ -47,28 +50,45 @@ public class ApodRepository {
 
     // Favorites methods
     public Flowable<List<ApodEntity>> getFavorites() {
-        // This would normally come from a Room database
-        // For this implementation, we'll return an empty list
-        return Flowable.just(List.of())
+        // Return the in-memory favorites list
+        return Flowable.just(favoritesList)
                 .subscribeOn(Schedulers.io());
     }
 
     public Single<Boolean> isFavorite(String date) {
-        // Simple stub
-        return Single.just(false)
-                .subscribeOn(Schedulers.io());
+        // Check if the APOD is in favorites
+        for (ApodEntity entity : favoritesList) {
+            if (entity.getDate().equals(date)) {
+                return Single.just(true).subscribeOn(Schedulers.io());
+            }
+        }
+        return Single.just(false).subscribeOn(Schedulers.io());
     }
 
     public Completable addToFavorites(ApodResponse apod) {
-        // Stub for adding to favorites
-        return Completable.complete()
-                .subscribeOn(Schedulers.io());
+        // Add to favorites
+        return Completable.fromAction(() -> {
+            ApodEntity entity = new ApodEntity(
+                    apod.getDate(),
+                    apod.getTitle(),
+                    apod.getExplanation(),
+                    apod.getUrl(),
+                    apod.getHdUrl(),
+                    apod.getMediaType(),
+                    apod.getCopyright()
+            );
+
+            // Remove if already exists (to avoid duplicates)
+            favoritesList.removeIf(e -> e.getDate().equals(apod.getDate()));
+            favoritesList.add(entity);
+        }).subscribeOn(Schedulers.io());
     }
 
     public Completable removeFromFavorites(String date) {
-        // Stub for removing from favorites
-        return Completable.complete()
-                .subscribeOn(Schedulers.io());
+        // Remove from favorites
+        return Completable.fromAction(() -> {
+            favoritesList.removeIf(entity -> entity.getDate().equals(date));
+        }).subscribeOn(Schedulers.io());
     }
 
     // Get a specific APOD by its position (0-6)
