@@ -40,12 +40,12 @@ public class PreloadedApodData {
                 createSaturnQuizzes()
         ));
 
-        // APOD 4: The Butterfly Nebula
+        // APOD 4: The Butterfly Nebula - FIXED URL
         apods.add(new ApodResponse(
                 "2023-10-04",
                 "The Butterfly Nebula",
                 "The Butterfly Nebula, also known as NGC 6302, is a bipolar planetary nebula located about 3,800 light-years away. The central star, one of the hottest in the galaxy at about 250,000 degrees Celsius, has ejected its outer layers, creating this striking butterfly-like structure.",
-                "\"https://upload.wikimedia.org/wikipedia/commons/4/4e/Butterfly_Nebula_by_Hubble_%28NGC_6302%29.jpg\"",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/800px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg",
                 "NASA, ESA, Hubble",
                 createButterflyQuizzes()
         ));
