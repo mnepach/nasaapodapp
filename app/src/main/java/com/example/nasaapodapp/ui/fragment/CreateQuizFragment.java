@@ -6,151 +6,216 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
+import com.bumptech.glide.Glide;
 import com.example.nasaapodapp.R;
-import com.example.nasaapodapp.data.local.QuizEntity;
+import com.example.nasaapodapp.data.model.ApodResponse;
 import com.example.nasaapodapp.ui.viewmodel.ApodViewModel;
-import com.google.android.material.textfield.TextInputEditText;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class CreateQuizFragment extends Fragment {
 
     private static final String TAG = "CreateQuizFragment";
     private ApodViewModel viewModel;
-    private TextInputEditText questionEditText;
-    private TextInputEditText correctAnswerEditText;
-    private TextInputEditText wrongAnswer1EditText;
-    private TextInputEditText wrongAnswer2EditText;
-    private TextInputEditText wrongAnswer3EditText;
-    private Button saveButton;
-    private Button cancelButton;
-    private boolean isEditing = false;
+    private ImageView quizImage;
+    private TextView quizTitle;
+    private TextView quizQuestion;
+    private RadioGroup answerGroup;
+    private RadioButton answer1, answer2, answer3, answer4;
+    private TextView resultText;
+    private Button checkAnswerButton;
+    private Button nextQuestionButton;
+    private Button finishButton;
+
+    private List<ApodResponse.Quiz> quizzes;
+    private int currentQuizIndex = 0;
+    private int correctAnswers = 0;
+    private int totalQuestions = 0;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_create_quiz, container, false);
+        return inflater.inflate(R.layout.fragment_quiz, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Инициализация ViewModel
+        // Initialize ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(ApodViewModel.class);
 
-        // Инициализация элементов UI
-        questionEditText = view.findViewById(R.id.edit_question);
-        correctAnswerEditText = view.findViewById(R.id.edit_correct_answer);
-        wrongAnswer1EditText = view.findViewById(R.id.edit_wrong_answer_1);
-        wrongAnswer2EditText = view.findViewById(R.id.edit_wrong_answer_2);
-        wrongAnswer3EditText = view.findViewById(R.id.edit_wrong_answer_3);
-        saveButton = view.findViewById(R.id.save_quiz_button);
-        cancelButton = view.findViewById(R.id.cancel_button);
+        // Initialize UI elements
+        quizImage = view.findViewById(R.id.quiz_image);
+        quizTitle = view.findViewById(R.id.quiz_title);
+        quizQuestion = view.findViewById(R.id.quiz_question);
+        answerGroup = view.findViewById(R.id.answer_group);
+        answer1 = view.findViewById(R.id.answer_1);
+        answer2 = view.findViewById(R.id.answer_2);
+        answer3 = view.findViewById(R.id.answer_3);
+        answer4 = view.findViewById(R.id.answer_4);
+        resultText = view.findViewById(R.id.result_text);
+        checkAnswerButton = view.findViewById(R.id.check_answer_button);
+        nextQuestionButton = view.findViewById(R.id.next_question_button);
+        finishButton = view.findViewById(R.id.finish_button);
 
-        // Проверка наличия теста для выбранного APOD
-        viewModel.getHasQuiz().observe(getViewLifecycleOwner(), hasQuiz -> {
-            Log.d(TAG, "Наличие теста: " + hasQuiz);
-            isEditing = hasQuiz;
-            saveButton.setText(isEditing ? R.string.edit_quiz : R.string.create_quiz);
-            if (hasQuiz) {
-                // Загрузка существующего теста
-                viewModel.loadQuizForApod(viewModel.getSelectedApod().getValue().getDate());
-            }
+        // Reset state
+        resultText.setVisibility(View.GONE);
+        nextQuestionButton.setVisibility(View.GONE);
+        finishButton.setVisibility(View.GONE);
+        currentQuizIndex = 0;
+        correctAnswers = 0;
+
+        // Load quiz data
+        ApodResponse apod = viewModel.getSelectedApod().getValue();
+        if (apod == null) {
+            Log.e(TAG, "Error: selectedApod is null");
+            Toast.makeText(requireContext(), R.string.no_image_selected, Toast.LENGTH_SHORT).show();
+            Navigation.findNavController(view).popBackStack();
+            return;
+        }
+
+        // Load APOD image
+        Log.d(TAG, "Loading image for APOD: " + apod.getUrl());
+        Glide.with(requireContext())
+                .load(apod.getUrl())
+                .placeholder(R.drawable.placeholder)
+                .error(R.drawable.error)
+                .into(quizImage);
+
+        quizTitle.setText(apod.getTitle());
+
+        // Get quizzes from ApodResponse
+        quizzes = apod.getQuizzes();
+        if (quizzes == null || quizzes.isEmpty()) {
+            Log.e(TAG, "Error: no quizzes available for this APOD");
+            Toast.makeText(requireContext(), R.string.no_quiz_available, Toast.LENGTH_SHORT).show();
+            Navigation.findNavController(view).popBackStack();
+            return;
+        }
+
+        totalQuestions = quizzes.size();
+        loadCurrentQuiz();
+
+        // Handle check answer button click
+        checkAnswerButton.setOnClickListener(v -> checkAnswer());
+
+        // Handle next question button click
+        nextQuestionButton.setOnClickListener(v -> {
+            currentQuizIndex++;
+            resetQuizUI();
+            loadCurrentQuiz();
         });
 
-        // Загрузка данных теста, если редактируем
-        viewModel.getQuizData().observe(getViewLifecycleOwner(), quizEntity -> {
-            if (quizEntity != null) {
-                Log.d(TAG, "Загружен тест: " + quizEntity.getQuestion());
-                questionEditText.setText(quizEntity.getQuestion());
-                correctAnswerEditText.setText(quizEntity.getCorrectAnswer());
-                wrongAnswer1EditText.setText(quizEntity.getWrongAnswer1());
-                wrongAnswer2EditText.setText(quizEntity.getWrongAnswer2());
-                wrongAnswer3EditText.setText(quizEntity.getWrongAnswer3());
-            }
+        // Handle finish button click
+        finishButton.setOnClickListener(v -> {
+            String resultMessage = getString(R.string.quiz_result, correctAnswers, totalQuestions);
+            Toast.makeText(requireContext(), resultMessage, Toast.LENGTH_LONG).show();
+            Navigation.findNavController(view).popBackStack();
         });
+    }
 
-        // Обработка кнопки сохранения
-        saveButton.setOnClickListener(v -> {
-            String question = questionEditText.getText().toString().trim();
-            String correctAnswer = correctAnswerEditText.getText().toString().trim();
-            String wrongAnswer1 = wrongAnswer1EditText.getText().toString().trim();
-            String wrongAnswer2 = wrongAnswer2EditText.getText().toString().trim();
-            String wrongAnswer3 = wrongAnswer3EditText.getText().toString().trim();
+    private void loadCurrentQuiz() {
+        if (currentQuizIndex >= quizzes.size()) {
+            showFinalResults();
+            return;
+        }
 
-            // Валидация полей
-            if (question.isEmpty() || correctAnswer.isEmpty() ||
-                    wrongAnswer1.isEmpty() || wrongAnswer2.isEmpty() || wrongAnswer3.isEmpty()) {
-                Log.w(TAG, "Ошибка: не все поля заполнены");
-                Toast.makeText(requireContext(), R.string.fill_all_fields, Toast.LENGTH_SHORT).show();
-                return;
-            }
+        ApodResponse.Quiz currentQuiz = quizzes.get(currentQuizIndex);
+        quizQuestion.setText(currentQuiz.getQuestion());
 
-            // Проверка на дублирование ответов
-            Set<String> answers = new HashSet<>();
-            answers.add(correctAnswer);
-            answers.add(wrongAnswer1);
-            answers.add(wrongAnswer2);
-            answers.add(wrongAnswer3);
-            if (answers.size() < 4) {
-                Log.w(TAG, "Ошибка: обнаружены одинаковые ответы");
-                Toast.makeText(requireContext(), R.string.duplicate_answers, Toast.LENGTH_SHORT).show();
-                return;
-            }
+        // Get all answers and shuffle them
+        List<String> answers = new ArrayList<>();
+        answers.add(currentQuiz.getCorrectAnswer());
+        answers.addAll(currentQuiz.getWrongAnswers());
+        Collections.shuffle(answers);
 
-            // Проверка наличия selectedApod
-            if (viewModel.getSelectedApod().getValue() == null) {
-                Log.e(TAG, "Ошибка: selectedApod равен null");
-                Toast.makeText(requireContext(), R.string.no_image_selected, Toast.LENGTH_SHORT).show();
-                return;
-            }
+        // Set answers to radio buttons
+        answer1.setText(answers.get(0));
+        answer2.setText(answers.get(1));
+        answer3.setText(answers.get(2));
+        answer4.setText(answers.get(3));
 
-            // Проверка, добавлено ли изображение в избранное
-            Boolean isFavorite = viewModel.getIsFavorite().getValue();
-            if (isFavorite == null || !isFavorite) {
-                Log.w(TAG, "Ошибка: изображение не добавлено в избранное");
-                Toast.makeText(requireContext(), R.string.image_not_favorited, Toast.LENGTH_LONG).show();
-                return;
-            }
+        // Update question counter
+        String questionCounter = getString(R.string.question_counter, currentQuizIndex + 1, totalQuestions);
+        quizTitle.setText(questionCounter);
+    }
 
-            // Сохранение теста
-            Log.d(TAG, "Сохранение теста, вопрос: " + question);
-            saveButton.setEnabled(false); // Предотвращение множественных кликов
-            viewModel.createOrUpdateQuiz(question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3);
-        });
+    private void checkAnswer() {
+        int selectedId = answerGroup.getCheckedRadioButtonId();
+        if (selectedId == -1) {
+            Toast.makeText(requireContext(), R.string.select_an_answer, Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        // Обработка успешного создания/обновления теста
-        viewModel.getHasQuiz().observe(getViewLifecycleOwner(), hasQuiz -> {
-            if (hasQuiz && !saveButton.isEnabled()) {
-                Log.d(TAG, "Тест успешно создан/обновлён, возврат в ApodDetailFragment");
-                Toast.makeText(requireContext(), isEditing ? R.string.quiz_updated : R.string.quiz_created, Toast.LENGTH_SHORT).show();
-                Navigation.findNavController(requireView()).popBackStack();
-            }
-        });
+        ApodResponse.Quiz currentQuiz = quizzes.get(currentQuizIndex);
+        RadioButton selectedAnswer = answerGroup.findViewById(selectedId);
+        String selectedText = selectedAnswer.getText().toString();
+        boolean isCorrect = selectedText.equals(currentQuiz.getCorrectAnswer());
 
-        // Обработка кнопки отмены
-        cancelButton.setOnClickListener(v -> {
-            Log.d(TAG, "Нажата кнопка отмены");
-            Navigation.findNavController(requireView()).popBackStack();
-        });
+        // Show result
+        resultText.setVisibility(View.VISIBLE);
+        if (isCorrect) {
+            correctAnswers++;
+            resultText.setText(R.string.correct);
+            resultText.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark));
+        } else {
+            resultText.setText(getString(R.string.incorrect_answer, currentQuiz.getCorrectAnswer()));
+            resultText.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark));
+        }
 
-        // Наблюдение за ошибками
-        viewModel.getError().observe(getViewLifecycleOwner(), errorMessage -> {
-            if (errorMessage != null && !errorMessage.isEmpty()) {
-                Log.e(TAG, "Ошибка: " + errorMessage);
-                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show();
-                saveButton.setEnabled(true); // Включение кнопки при ошибке
-            }
-        });
+        // Disable answer selection
+        disableAnswerSelection();
+
+        // Show appropriate navigation button
+        checkAnswerButton.setVisibility(View.GONE);
+        if (currentQuizIndex < quizzes.size() - 1) {
+            nextQuestionButton.setVisibility(View.VISIBLE);
+        } else {
+            finishButton.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void disableAnswerSelection() {
+        for (int i = 0; i < answerGroup.getChildCount(); i++) {
+            answerGroup.getChildAt(i).setEnabled(false);
+        }
+    }
+
+    private void resetQuizUI() {
+        // Reset question UI
+        resultText.setVisibility(View.GONE);
+        answerGroup.clearCheck();
+
+        // Enable answer selection
+        for (int i = 0; i < answerGroup.getChildCount(); i++) {
+            answerGroup.getChildAt(i).setEnabled(true);
+        }
+
+        // Reset buttons
+        checkAnswerButton.setVisibility(View.VISIBLE);
+        nextQuestionButton.setVisibility(View.GONE);
+        finishButton.setVisibility(View.GONE);
+    }
+
+    private void showFinalResults() {
+        String resultMessage = getString(R.string.quiz_result, correctAnswers, totalQuestions);
+        Toast.makeText(requireContext(), resultMessage, Toast.LENGTH_LONG).show();
+        Navigation.findNavController(requireView()).popBackStack();
     }
 }
