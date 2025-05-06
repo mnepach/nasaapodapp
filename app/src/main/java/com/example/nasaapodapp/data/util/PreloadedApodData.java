@@ -10,12 +10,12 @@ public class PreloadedApodData {
     public static List<ApodResponse> getPreloadedApods() {
         List<ApodResponse> apods = new ArrayList<>();
 
-        // APOD 1: The Andromeda Galaxy
+        // APOD 1: The Andromeda Galaxy - исправлены URL
         apods.add(new ApodResponse(
                 "2023-10-01",
                 "The Andromeda Galaxy",
                 "The Andromeda Galaxy (M31) is the closest large galaxy to our Milky Way. It's a spiral galaxy about 2.5 million light-years away and is visible to the naked eye on dark nights. Andromeda contains about one trillion stars, at least twice the number in our own galaxy.",
-                "https://apod.nasa.gov/apod/image/2210/M31_HubbleSpitzer_960.jpg",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Andromeda_Galaxy_%28with_h-alpha%29.jpg/800px-Andromeda_Galaxy_%28with_h-alpha%29.jpg",
                 "NASA, ESA, J. Dalcanton et al.",
                 createAndromeadaQuizzes()
         ));
@@ -25,7 +25,7 @@ public class PreloadedApodData {
                 "2023-10-02",
                 "The Pillars of Creation",
                 "The Pillars of Creation are part of the Eagle Nebula, located about 6,500 light-years away. These towering columns of interstellar gas and dust are the site of new star formation. First captured by Hubble in 1995, they've become one of the most iconic astronomical images.",
-                "https://apod.nasa.gov/apod/image/2211/pillars2_webb_960.jpg",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Pillars_of_creation_2014_HST_WFC3-UVIS_full-res_denoised.jpg/800px-Pillars_of_creation_2014_HST_WFC3-UVIS_full-res_denoised.jpg",
                 "NASA, ESA, CSA, STScI",
                 createPillarsQuizzes()
         ));
@@ -35,7 +35,7 @@ public class PreloadedApodData {
                 "2023-10-03",
                 "Saturn and Its Rings",
                 "Saturn is the sixth planet from the Sun and the second-largest in our Solar System. It's most known for its stunning ring system, consisting mostly of ice particles with a smaller amount of rocky debris and dust. These rings extend up to 175,000 miles from the planet but are incredibly thin, only about 66 feet thick.",
-                "https://apod.nasa.gov/apod/image/2209/SaturnIR_Webb_960.jpg",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/800px-Saturn_during_Equinox.jpg",
                 "NASA, ESA, CSA, STScI, Webb Team",
                 createSaturnQuizzes()
         ));
@@ -45,7 +45,7 @@ public class PreloadedApodData {
                 "2023-10-04",
                 "The Butterfly Nebula",
                 "The Butterfly Nebula, also known as NGC 6302, is a bipolar planetary nebula located about 3,800 light-years away. The central star, one of the hottest in the galaxy at about 250,000 degrees Celsius, has ejected its outer layers, creating this striking butterfly-like structure.",
-                "https://apod.nasa.gov/apod/image/2205/butterfly_hubble_960.jpg",
+                "\"https://upload.wikimedia.org/wikipedia/commons/4/4e/Butterfly_Nebula_by_Hubble_%28NGC_6302%29.jpg\"",
                 "NASA, ESA, Hubble",
                 createButterflyQuizzes()
         ));
@@ -55,7 +55,7 @@ public class PreloadedApodData {
                 "2023-10-05",
                 "The Crab Nebula",
                 "The Crab Nebula (M1) is the remnant of a supernova explosion observed by Chinese astronomers in 1054 AD. Located 6,500 light-years away, it's expanding at about 1,500 kilometers per second. At its center lies a pulsar – a rapidly rotating neutron star that emits beams of radiation.",
-                "https://apod.nasa.gov/apod/image/2112/crab_hubble_960.jpg",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Crab_Nebula.jpg/800px-Crab_Nebula.jpg",
                 "NASA, ESA, Hubble Legacy Archive",
                 createCrabQuizzes()
         ));
@@ -65,7 +65,7 @@ public class PreloadedApodData {
                 "2023-10-06",
                 "The Helix Nebula",
                 "Often called 'The Eye of God', the Helix Nebula (NGC 7293) is one of the closest planetary nebulae to Earth at about 700 light-years away. It's the result of a dying star shedding its outer layers, revealing a fascinating structure of gas and dust illuminated by the hot core of the former star.",
-                "https://apod.nasa.gov/apod/image/2302/helix_webb_960.jpg",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/NGC7293_%282004%29.jpg/800px-NGC7293_%282004%29.jpg",
                 "NASA, ESA, CSA, STScI",
                 createHelixQuizzes()
         ));
@@ -75,7 +75,7 @@ public class PreloadedApodData {
                 "2023-10-07",
                 "The Horsehead Nebula",
                 "The Horsehead Nebula (Barnard 33) is a dark nebula located about 1,500 light-years away in the constellation Orion. Its distinctive equine silhouette is formed by a dense cloud of dust and gas blocking the light from the bright nebula IC 434 behind it. It's one of the most recognizable objects in the night sky.",
-                "https://apod.nasa.gov/apod/image/2203/horsehead_hubble_960.jpg",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Barnard_33.jpg/800px-Barnard_33.jpg",
                 "NASA, ESA, Hubble Heritage Team",
                 createHorseheadQuizzes()
         ));

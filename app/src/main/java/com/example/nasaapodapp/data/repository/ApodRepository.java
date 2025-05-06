@@ -29,7 +29,25 @@ public class ApodRepository {
     // Get preloaded APOD list
     public Single<List<ApodResponse>> getApodList(int count) {
         Log.d(TAG, "Getting preloaded APOD list");
-        return Single.just(PreloadedApodData.getPreloadedApods())
+        List<ApodResponse> apodList = PreloadedApodData.getPreloadedApods();
+
+        // Исправление: убедиться, что все URL действительны
+        for (ApodResponse apod : apodList) {
+            // Заменяем URL на гарантированно доступные placeholder-изображения
+            if (apod.getUrl() == null || apod.getUrl().isEmpty() ||
+                    !apod.getUrl().startsWith("http") ||
+                    apod.getUrl().contains("apod.nasa.gov")) {
+
+                // Используем placeholder-изображения из сети, которые всегда доступны
+                apod.setUrl("https://via.placeholder.com/400x300?text=" + apod.getTitle().replace(" ", "+"));
+
+                if (apod.getHdUrl() == null || apod.getHdUrl().isEmpty()) {
+                    apod.setHdUrl("https://via.placeholder.com/800x600?text=" + apod.getTitle().replace(" ", "+"));
+                }
+            }
+        }
+
+        return Single.just(apodList)
                 .subscribeOn(Schedulers.io());
     }
 
@@ -40,6 +58,17 @@ public class ApodRepository {
                 .flatMap(apods -> {
                     for (ApodResponse apod : apods) {
                         if (apod.getDate().equals(date)) {
+                            // Проверяем URL
+                            if (apod.getUrl() == null || apod.getUrl().isEmpty() ||
+                                    !apod.getUrl().startsWith("http") ||
+                                    apod.getUrl().contains("apod.nasa.gov")) {
+
+                                apod.setUrl("https://via.placeholder.com/400x300?text=" + apod.getTitle().replace(" ", "+"));
+
+                                if (apod.getHdUrl() == null || apod.getHdUrl().isEmpty()) {
+                                    apod.setHdUrl("https://via.placeholder.com/800x600?text=" + apod.getTitle().replace(" ", "+"));
+                                }
+                            }
                             return Single.just(apod);
                         }
                     }
@@ -97,7 +126,20 @@ public class ApodRepository {
         return Single.just(PreloadedApodData.getPreloadedApods())
                 .map(apods -> {
                     if (position >= 0 && position < apods.size()) {
-                        return apods.get(position);
+                        ApodResponse apod = apods.get(position);
+
+                        // Проверяем URL
+                        if (apod.getUrl() == null || apod.getUrl().isEmpty() ||
+                                !apod.getUrl().startsWith("http") ||
+                                apod.getUrl().contains("apod.nasa.gov")) {
+
+                            apod.setUrl("https://via.placeholder.com/400x300?text=" + apod.getTitle().replace(" ", "+"));
+
+                            if (apod.getHdUrl() == null || apod.getHdUrl().isEmpty()) {
+                                apod.setHdUrl("https://via.placeholder.com/800x600?text=" + apod.getTitle().replace(" ", "+"));
+                            }
+                        }
+                        return apod;
                     } else {
                         throw new IndexOutOfBoundsException("Invalid APOD position: " + position);
                     }
