@@ -19,6 +19,9 @@ import com.example.nasaapodapp.data.local.QuizEntity;
 import com.example.nasaapodapp.ui.viewmodel.ApodViewModel;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class CreateQuizFragment extends Fragment {
 
     private static final String TAG = "CreateQuizFragment";
@@ -58,6 +61,7 @@ public class CreateQuizFragment extends Fragment {
         viewModel.getHasQuiz().observe(getViewLifecycleOwner(), hasQuiz -> {
             Log.d(TAG, "Наличие теста: " + hasQuiz);
             isEditing = hasQuiz;
+            saveButton.setText(isEditing ? R.string.edit_quiz : R.string.create_quiz);
             if (hasQuiz) {
                 // Загрузка существующего теста
                 viewModel.loadQuizForApod(viewModel.getSelectedApod().getValue().getDate());
@@ -88,14 +92,34 @@ public class CreateQuizFragment extends Fragment {
             if (question.isEmpty() || correctAnswer.isEmpty() ||
                     wrongAnswer1.isEmpty() || wrongAnswer2.isEmpty() || wrongAnswer3.isEmpty()) {
                 Log.w(TAG, "Ошибка: не все поля заполнены");
-                Toast.makeText(requireContext(), "Заполните все поля", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), R.string.fill_all_fields, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Проверка на дублирование ответов
+            Set<String> answers = new HashSet<>();
+            answers.add(correctAnswer);
+            answers.add(wrongAnswer1);
+            answers.add(wrongAnswer2);
+            answers.add(wrongAnswer3);
+            if (answers.size() < 4) {
+                Log.w(TAG, "Ошибка: обнаружены одинаковые ответы");
+                Toast.makeText(requireContext(), R.string.duplicate_answers, Toast.LENGTH_SHORT).show();
                 return;
             }
 
             // Проверка наличия selectedApod
             if (viewModel.getSelectedApod().getValue() == null) {
                 Log.e(TAG, "Ошибка: selectedApod равен null");
-                Toast.makeText(requireContext(), "Изображение не выбрано для создания теста", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), R.string.no_image_selected, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Проверка, добавлено ли изображение в избранное
+            Boolean isFavorite = viewModel.getIsFavorite().getValue();
+            if (isFavorite == null || !isFavorite) {
+                Log.w(TAG, "Ошибка: изображение не добавлено в избранное");
+                Toast.makeText(requireContext(), R.string.image_not_favorited, Toast.LENGTH_LONG).show();
                 return;
             }
 
@@ -105,10 +129,10 @@ public class CreateQuizFragment extends Fragment {
             viewModel.createOrUpdateQuiz(question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3);
         });
 
-        // Обработка успешного создания теста
+        // Обработка успешного создания/обновления теста
         viewModel.getHasQuiz().observe(getViewLifecycleOwner(), hasQuiz -> {
             if (hasQuiz && !saveButton.isEnabled()) {
-                Log.d(TAG, "Тест успешно создан, возврат в ApodDetailFragment");
+                Log.d(TAG, "Тест успешно создан/обновлён, возврат в ApodDetailFragment");
                 Toast.makeText(requireContext(), isEditing ? R.string.quiz_updated : R.string.quiz_created, Toast.LENGTH_SHORT).show();
                 Navigation.findNavController(requireView()).popBackStack();
             }

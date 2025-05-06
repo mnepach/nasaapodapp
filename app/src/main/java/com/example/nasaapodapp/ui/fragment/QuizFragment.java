@@ -70,7 +70,7 @@ public class QuizFragment extends Fragment {
         ApodResponse apod = viewModel.getSelectedApod().getValue();
         if (apod == null) {
             Log.e(TAG, "Ошибка: selectedApod равен null");
-            Toast.makeText(requireContext(), "Ошибка: изображение не выбрано", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), R.string.no_image_selected, Toast.LENGTH_SHORT).show();
             Navigation.findNavController(view).popBackStack();
             return;
         }
@@ -90,7 +90,13 @@ public class QuizFragment extends Fragment {
         // Наблюдение за данными теста
         viewModel.getQuizData().observe(getViewLifecycleOwner(), quiz -> {
             Log.d(TAG, "Получены данные теста: " + (quiz != null ? quiz.getQuestion() : "null"));
-            bindQuizData(quiz);
+            if (quiz != null) {
+                bindQuizData(quiz);
+            } else {
+                Log.e(TAG, "Ошибка: тест не найден");
+                Toast.makeText(requireContext(), R.string.no_quiz_available, Toast.LENGTH_SHORT).show();
+                Navigation.findNavController(view).popBackStack();
+            }
         });
 
         // Наблюдение за ошибками
@@ -110,13 +116,6 @@ public class QuizFragment extends Fragment {
     }
 
     private void bindQuizData(QuizEntity quiz) {
-        if (quiz == null) {
-            Log.e(TAG, "Ошибка: QuizEntity равен null");
-            Toast.makeText(requireContext(), "Ошибка: тест не найден", Toast.LENGTH_SHORT).show();
-            Navigation.findNavController(requireView()).popBackStack();
-            return;
-        }
-
         quizQuestion.setText(quiz.getQuestion());
 
         // Перемешивание ответов
@@ -145,7 +144,7 @@ public class QuizFragment extends Fragment {
         QuizEntity quiz = viewModel.getQuizData().getValue();
         if (quiz == null) {
             Log.e(TAG, "Ошибка: QuizEntity равен null при проверке ответа");
-            Toast.makeText(requireContext(), "Ошибка: тест не найден", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), R.string.no_quiz_available, Toast.LENGTH_SHORT).show();
             return;
         }
 

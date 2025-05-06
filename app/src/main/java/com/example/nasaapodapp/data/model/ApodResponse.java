@@ -1,33 +1,35 @@
 package com.example.nasaapodapp.data.model;
 
-import com.google.gson.annotations.SerializedName;
+import java.util.Arrays;
+import java.util.List;
 
 public class ApodResponse {
-    @SerializedName("date")
     private String date;
-
-    @SerializedName("explanation")
     private String explanation;
-
-    @SerializedName("hdurl")
-    private String hdUrl;
-
-    @SerializedName("media_type")
-    private String mediaType;
-
-    @SerializedName("service_version")
-    private String serviceVersion;
-
-    @SerializedName("title")
     private String title;
-
-    @SerializedName("url")
     private String url;
-
-    @SerializedName("copyright")
     private String copyright;
+    private boolean isPreloaded;
 
-    // Getters and setters
+    // Fields for pre-loaded quizzes
+    private List<Quiz> quizzes;
+
+    public ApodResponse() {
+        // Default constructor for API responses
+    }
+
+    // Constructor for pre-loaded APODs with quizzes
+    public ApodResponse(String date, String title, String explanation, String url,
+                        String copyright, List<Quiz> quizzes) {
+        this.date = date;
+        this.title = title;
+        this.explanation = explanation;
+        this.url = url;
+        this.copyright = copyright;
+        this.quizzes = quizzes;
+        this.isPreloaded = true;
+    }
+
     public String getDate() {
         return date;
     }
@@ -42,30 +44,6 @@ public class ApodResponse {
 
     public void setExplanation(String explanation) {
         this.explanation = explanation;
-    }
-
-    public String getHdUrl() {
-        return hdUrl;
-    }
-
-    public void setHdUrl(String hdUrl) {
-        this.hdUrl = hdUrl;
-    }
-
-    public String getMediaType() {
-        return mediaType;
-    }
-
-    public void setMediaType(String mediaType) {
-        this.mediaType = mediaType;
-    }
-
-    public String getServiceVersion() {
-        return serviceVersion;
-    }
-
-    public void setServiceVersion(String serviceVersion) {
-        this.serviceVersion = serviceVersion;
     }
 
     public String getTitle() {
@@ -90,5 +68,50 @@ public class ApodResponse {
 
     public void setCopyright(String copyright) {
         this.copyright = copyright;
+    }
+
+    public boolean isPreloaded() {
+        return isPreloaded;
+    }
+
+    public void setPreloaded(boolean preloaded) {
+        isPreloaded = preloaded;
+    }
+
+    public List<Quiz> getQuizzes() {
+        return quizzes;
+    }
+
+    public void setQuizzes(List<Quiz> quizzes) {
+        this.quizzes = quizzes;
+    }
+
+    // Inner class for Quiz questions
+    public static class Quiz {
+        private String question;
+        private String correctAnswer;
+        private List<String> wrongAnswers;
+
+        public Quiz(String question, String correctAnswer, String... wrongAnswers) {
+            this.question = question;
+            this.correctAnswer = correctAnswer;
+            this.wrongAnswers = Arrays.asList(wrongAnswers);
+        }
+
+        public String getQuestion() {
+            return question;
+        }
+
+        public String getCorrectAnswer() {
+            return correctAnswer;
+        }
+
+        public List<String> getWrongAnswers() {
+            return wrongAnswers;
+        }
+
+        public List<String> getAllAnswers() {
+            return Arrays.asList(correctAnswer, wrongAnswers.get(0), wrongAnswers.get(1), wrongAnswers.get(2));
+        }
     }
 }

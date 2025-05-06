@@ -65,7 +65,7 @@ public class ApodDetailFragment extends Fragment {
             Log.d(TAG, "Получен selectedApod: " + (apod != null ? apod.getTitle() : "null"));
             bindApodData(apod);
             if (apod != null) {
-                // Повторная проверка наличия теста при изменении APOD
+                // Проверка наличия теста
                 viewModel.checkIfHasQuiz(apod.getDate());
             }
         });
@@ -100,7 +100,7 @@ public class ApodDetailFragment extends Fragment {
         createQuizButton.setOnClickListener(v -> {
             if (viewModel.getSelectedApod().getValue() == null) {
                 Log.e(TAG, "Ошибка: selectedApod равен null при создании теста");
-                Toast.makeText(requireContext(), "Изображение не выбрано", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), R.string.no_image_selected, Toast.LENGTH_SHORT).show();
                 return;
             }
             Log.d(TAG, "Навигация в CreateQuizFragment");
@@ -111,12 +111,12 @@ public class ApodDetailFragment extends Fragment {
         takeQuizButton.setOnClickListener(v -> {
             if (viewModel.getSelectedApod().getValue() == null) {
                 Log.e(TAG, "Ошибка: selectedApod равен null при прохождении теста");
-                Toast.makeText(requireContext(), "Изображение не выбрано", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), R.string.no_image_selected, Toast.LENGTH_SHORT).show();
                 return;
             }
             if (!viewModel.getHasQuiz().getValue()) {
                 Log.e(TAG, "Ошибка: тест отсутствует при попытке прохождения");
-                Toast.makeText(requireContext(), "Тест не создан", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), R.string.no_quiz_available, Toast.LENGTH_SHORT).show();
                 return;
             }
             Log.d(TAG, "Навигация в QuizFragment");
@@ -127,7 +127,7 @@ public class ApodDetailFragment extends Fragment {
         deleteQuizButton.setOnClickListener(v -> {
             Log.d(TAG, "Нажата кнопка удаления теста");
             viewModel.deleteQuiz();
-            Toast.makeText(requireContext(), "Тест удалён", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), R.string.quiz_deleted, Toast.LENGTH_SHORT).show();
         });
 
         // Наблюдение за ошибками

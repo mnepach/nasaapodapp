@@ -29,4 +29,10 @@
     <string name="cancel">Cancel</string>
     <string name="manage_quiz">Manage Quiz</string>
     <string name="quiz_description">Create a quiz about this astronomy picture. The quiz should contain one question with one correct answer and three wrong answers.</string>
+    <string name="fill_all_fields">Please fill in all fields</string>
+    <string name="duplicate_answers">Answers must be unique</string>
+    <string name="no_image_selected">No image selected</string>
+    <string name="no_quiz_available">No quiz available for this image</string>
+    <string name="quiz_deleted">Quiz deleted successfully</string>
+    <string name="image_not_favorited">Please add the image to favorites before creating a quiz</string>
 </resources>

@@ -1,102 +1,87 @@
 package com.example.nasaapodapp.data.repository;
 
-import android.content.Context;
+import android.app.Application;
+import android.util.Log;
 
-import com.example.nasaapodapp.data.local.ApodDatabase;
 import com.example.nasaapodapp.data.local.ApodEntity;
-import com.example.nasaapodapp.data.local.QuizEntity;
 import com.example.nasaapodapp.data.model.ApodResponse;
-import com.example.nasaapodapp.data.remote.NasaApiService;
-import com.example.nasaapodapp.data.remote.RetrofitClient;
+import com.example.nasaapodapp.data.util.PreloadedApodData;
 
 import java.util.List;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ApodRepository {
-    private static final String API_KEY = "DEMO_KEY"; // Replace with your NASA API key
-    private final NasaApiService apiService;
-    private final ApodDatabase database;
+    private static final String TAG = "ApodRepository";
 
-    public ApodRepository(Context context) {
-        apiService = RetrofitClient.getClient().create(NasaApiService.class);
-        database = ApodDatabase.getInstance(context);
+    private final Application application;
+
+    public ApodRepository(Application application) {
+        this.application = application;
     }
 
-    public Single<ApodResponse> getApod() {
-        return apiService.getApod(API_KEY)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
-    }
-
+    // Get preloaded APOD list
     public Single<List<ApodResponse>> getApodList(int count) {
-        return apiService.getApodList(API_KEY, count)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        Log.d(TAG, "Getting preloaded APOD list");
+        return Single.just(PreloadedApodData.getPreloadedApods())
+                .subscribeOn(Schedulers.io());
     }
 
-    public Single<List<ApodEntity>> getFavorites() {
-        return database.apodDao().getAllFavorites()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+    // Get one specific APOD by date
+    public Single<ApodResponse> getApod(String date) {
+        Log.d(TAG, "Getting preloaded APOD for date: " + date);
+        return Single.just(PreloadedApodData.getPreloadedApods())
+                .flatMap(apods -> {
+                    for (ApodResponse apod : apods) {
+                        if (apod.getDate().equals(date)) {
+                            return Single.just(apod);
+                        }
+                    }
+                    return Single.error(new Exception("APOD not found for date: " + date));
+                })
+                .subscribeOn(Schedulers.io());
+    }
+
+    // Favorites methods
+    public Flowable<List<ApodEntity>> getFavorites() {
+        // This would normally come from a Room database
+        // For this implementation, we'll return an empty list
+        return Flowable.just(List.of())
+                .subscribeOn(Schedulers.io());
     }
 
     public Single<Boolean> isFavorite(String date) {
-        return database.apodDao().isFavorite(date)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        // Simple stub
+        return Single.just(false)
+                .subscribeOn(Schedulers.io());
     }
 
     public Completable addToFavorites(ApodResponse apod) {
-        ApodEntity entity = new ApodEntity(
-                apod.getDate(),
-                apod.getTitle(),
-                apod.getExplanation(),
-                apod.getUrl(),
-                apod.getHdUrl(),
-                apod.getMediaType(),
-                apod.getCopyright()
-        );
-        return database.apodDao().insertFavorite(entity)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        // Stub for adding to favorites
+        return Completable.complete()
+                .subscribeOn(Schedulers.io());
     }
 
     public Completable removeFromFavorites(String date) {
-        return database.apodDao().deleteFavorite(date)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+        // Stub for removing from favorites
+        return Completable.complete()
+                .subscribeOn(Schedulers.io());
     }
 
-    // Quiz related methods
-    public Single<QuizEntity> getQuizForApod(String date) {
-        return database.quizDao().getQuizForApod(date)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
-    }
-
-    public Single<Boolean> hasQuiz(String date) {
-        return database.quizDao().hasQuiz(date)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
-    }
-
-    public Completable createQuiz(String apodDate, String question, String correctAnswer,
-                                  String wrongAnswer1, String wrongAnswer2, String wrongAnswer3) {
-        QuizEntity quizEntity = new QuizEntity(
-                apodDate, question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3
-        );
-        return database.quizDao().insertQuiz(quizEntity)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
-    }
-
-    public Completable deleteQuiz(String apodDate) {
-        return database.quizDao().deleteQuiz(apodDate)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+    // Get a specific APOD by its position (0-6)
+    public Single<ApodResponse> getApodByPosition(int position) {
+        Log.d(TAG, "Getting preloaded APOD for position: " + position);
+        return Single.just(PreloadedApodData.getPreloadedApods())
+                .map(apods -> {
+                    if (position >= 0 && position < apods.size()) {
+                        return apods.get(position);
+                    } else {
+                        throw new IndexOutOfBoundsException("Invalid APOD position: " + position);
+                    }
+                })
+                .subscribeOn(Schedulers.io());
     }
 }
